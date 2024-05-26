@@ -2,8 +2,54 @@ import h5py
 import numpy as np
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
 from torchvision import models
+from datasets import Whole_Slide_Bag_FP
 
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+def feature_extraction(args, file_path, output_path, wsi, model, processor,
+ 	verbose = 0, print_every=20):
+	"""
+	args:
+		file_path: directory of bag (.h5 file)
+		output_path: directory to save computed features (.h5 file)
+		verbose: level of feedback
+	"""
+
+	dataset = Whole_Slide_Bag_FP(
+		file_path=file_path, wsi=wsi, model_type=args.model_type, 
+		target_patch_size=args.target_patch_size, transform=processor
+	)
+	
+	kwargs = {'num_workers': 4, 'pin_memory': True} if device.type == "cuda" else {}
+	loader = DataLoader(dataset=dataset, batch_size=args.batch_size, **kwargs, collate_fn=collate_features)
+
+	if verbose > 0:
+		print('processing {}: total of {} batches'.format(file_path,len(loader)))
+
+	mode = 'w'
+	for count, (batch, coords) in enumerate(loader):
+		with torch.no_grad():	
+			if count % print_every == 0:
+				print('batch {}/{}, {} files processed'.format(count, len(loader), count * args.batch_size))
+			batch = batch.to(device, non_blocking=True)
+			
+			if args.model_type == "plip":
+				features = model.get_image_features(batch)
+			elif args.model_type == "conch":
+				features = model.encode_image(batch, proj_contrast=False, normalize=False)
+			else:
+				features = model(batch)
+
+			if args.model_type == "ssl":
+				features = features.last_hidden_state[:, 0, :]
+			features = features.cpu().numpy()
+
+			asset_dict = {'features': features, 'coords': coords}
+			save_hdf5(output_path, asset_dict, attr_dict= None, mode=mode)
+			mode = 'a'
+	
+	return output_path
 
 def init_model(args):
 	if args.model_type == "resnet50":
@@ -15,7 +61,7 @@ def init_model(args):
 		backbone = ViTModel.from_pretrained("owkin/phikon", add_pooling_layer=False)
 		
 	elif args.model_type == "ctp":
-		from ctran import ctranspath
+		from models.ctran import ctranspath
 		backbone = ctranspath()
 		backbone.head = nn.Identity()
 		backbone.load_state_dict(torch.load(args.ckpt_path)["model"], strict=True)
@@ -23,6 +69,13 @@ def init_model(args):
 	elif args.model_type == "plip":
 		from transformers import CLIPModel
 		backbone = CLIPModel.from_pretrained("vinid/plip")
+	
+	elif args.model_type == "uni":
+		import timm
+		backbone = timm.create_model(
+			"vit_large_patch16_224", img_size=224, patch_size=16, init_values=1e-5, num_classes=0, dynamic_img_size=True
+		)
+		backbone.load_state_dict(torch.load(args.ckpt_path, map_location=device), strict=True)
 
 	return backbone
 
