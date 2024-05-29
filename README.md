@@ -35,7 +35,7 @@ The model weights for UNI and CONCH models can be accessed at Hugging Face repos
 
 ## Usage
 
-First, extract patch coordinates using the [CLAM library](https://github.com/mahmoodlab/CLAM).
+First, extract patch coordinates using the [CLAM library](https://github.com/mahmoodlab/CLAM)<sup>7</sup>.
 Then, run the command below to extract patch features.
 
 ```bash
@@ -62,12 +62,19 @@ data_root_dir
 |__ data_feat_dir (where extracted features are saved)
 |__ slide_list.csv
 ```
+## License
 
-## Acknowledgement
+This repository is licensed under the [GPLv3](LICENSE) and is available for non-commercial academic purposes.
 
-This code is adapted from [CLAM](https://github.com/mahmoodlab/CLAM)<sup>7</sup>. 
+### Acknowledgements and Third-Party Licenses
 
-The model of [CTransPath](./models/ctran.py) is copied from [TransPath GitHub Repository](https://github.com/Xiyue-Wang/TransPath).
+- This code is adapted from the [CLAM repository](https://github.com/mahmoodlab/CLAM). Please refer to the CLAM repository for its license terms.
+- The [CTransPath model](./models/ctran.py) is copied from the [TransPath repository](https://github.com/Xiyue-Wang/TransPath). Please refer to the TransPath repository for its license terms.
+- The models HistoSSL, UNI, PLIP, and CONCH are used according to their respective licenses. Please refer to their respective repositories for license terms:
+  - [HistoSSL](https://github.com/owkin/HistoSSLscaling)
+  - [UNI](https://github.com/mahmoodlab/UNI)
+  - [PLIP](https://github.com/PathologyFoundation/plip)
+  - [CONCH](https://github.com/mahmoodlab/CONCH)
 
 ## References
 
