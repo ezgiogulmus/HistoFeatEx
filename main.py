@@ -18,7 +18,7 @@ parser.add_argument('--data_root_dir', type=str, default="/media/nfs/SURV/TCGA_O
 parser.add_argument('--data_h5_dir', type=str, default="SP1024")
 parser.add_argument('--data_slide_dir', type=str, default="Slides")
 parser.add_argument('--slide_ext', type=str, default= '.svs')
-parser.add_argument('--csv_path', type=str, default="slide_list.csv")
+parser.add_argument('--csv_file', type=str, default="slide_list.csv")
 parser.add_argument('--feat_dir', type=str, default="Feats1024")
 parser.add_argument('--batch_size', type=int, default=256)
 parser.add_argument('--no_auto_skip', default=False, action='store_true')
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 	tmp_folder = os.path.join(args.data_root_dir, 'tmp', args.model_type.upper())
 	os.makedirs(tmp_folder, exist_ok=True)
 
-	args.csv_path = os.path.join(args.data_root_dir, args.csv_path)
+	args.csv_path = os.path.join(args.data_root_dir, args.csv_file)
 	
 	if not os.path.isfile(args.csv_path):
 		raise NotImplementedError
