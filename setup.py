@@ -16,6 +16,7 @@ setup(
         "numpy==1.23.4", 
         "pandas==1.4.3",
         "h5py",
+        "openslide-python",
         "transformers==4.31.0",
         "timm==0.9.8",
         "conch @ git+https://github.com/mahmoodlab/CONCH",
@@ -26,4 +27,4 @@ setup(
         "Programming Language :: Python :: 3",
         "License :: GPLv3",
     ]
-)
+)       

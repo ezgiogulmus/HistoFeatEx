@@ -23,9 +23,9 @@ HistoFeatEx is a tool for extracting patch-level features from histopathology im
 ```bash
 git clone https://github.com/ezgiogulmus/HistoFeatEx.git
 cd HistoFeatEx
-conda create -n histofe
-conda activate histofe
-pip install -r ./requirements.txt
+conda create -n histofex python=3.10 -y
+conda activate histofex 
+pip install -e .
 ```
 
 For the installation of the CTransPath environment, please refer to their repository as it involves a modified `timm` package:
