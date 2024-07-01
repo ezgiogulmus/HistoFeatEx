@@ -3,11 +3,10 @@ import time
 import h5py
 import openslide
 import argparse
-import shutil
 import torch
 
-from datasets import Dataset_All_Bags
-from utils import feature_extraction, init_model, print_network
+from histofeatex.datasets import Dataset_All_Bags
+from histofeatex.utils import feature_extraction, init_model
 
 # This code is adapted from CLAM by Mahmoodlab (https://github.com/mahmoodlab/CLAM)
 
@@ -24,7 +23,7 @@ parser.add_argument('--batch_size', type=int, default=256)
 parser.add_argument('--no_auto_skip', default=False, action='store_true')
 parser.add_argument('--target_patch_size', type=int, default=-1)
 parser.add_argument('--model_type', type=str, default="ctp")
-parser.add_argument('--ckpt_path', type=str, default='./models/ctranspath.pth')
+parser.add_argument('--ckpt_path', type=str, default='./model_ckpt/ctranspath.pth')
 args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -47,25 +46,7 @@ if __name__ == '__main__':
 	if not os.path.isfile(args.csv_path):
 		raise NotImplementedError
 
-	print('loading model checkpoint')
-	processor = None
-	if args.model_type == "conch":
-		from conch.open_clip_custom import create_model_from_pretrained
-		model, processor = create_model_from_pretrained('conch_ViT-B-16', args.ckpt_path)
-	else:
-		model = init_model(args)
-		if args.model_type == "ssl":
-			from transformers import AutoImageProcessor, CLIPProcessor
-			processor = AutoImageProcessor.from_pretrained("owkin/phikon")
-		elif args.model_type == "plip":
-			from transformers import CLIPProcessor
-			processor = CLIPProcessor.from_pretrained("vinid/plip")
-	
-	model.to(device)
-	print_network(model)
-	if torch.cuda.device_count() > 1:
-		model = torch.nn.DataParallel(model)
-	model.eval()
+	model, processor = init_model(args)
 
 	bags_dataset = Dataset_All_Bags(args.csv_path)
 	total = len(bags_dataset)

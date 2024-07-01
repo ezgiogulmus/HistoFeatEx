@@ -4,9 +4,53 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import models
-from datasets import Whole_Slide_Bag_FP
+from histofeatex.datasets import Whole_Slide_Bag_FP
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+
+def init_model(args):
+	print('loading model checkpoint')
+	processor = None
+	if args.model_type == "conch":
+		from conch.open_clip_custom import create_model_from_pretrained
+		model, processor = create_model_from_pretrained('conch_ViT-B-16', args.ckpt_path)
+
+	elif args.model_type == "resnet50":
+		model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+		model.fc = nn.Identity()
+	
+	elif args.model_type == "ssl":
+		from transformers import ViTModel, AutoImageProcessor
+		model = ViTModel.from_pretrained("owkin/phikon", add_pooling_layer=False)
+		processor = AutoImageProcessor.from_pretrained("owkin/phikon")
+		
+	elif args.model_type == "ctp":
+		from histofeatex.utils.ctran import ctranspath
+		model = ctranspath()
+		model.head = nn.Identity()
+		model.load_state_dict(torch.load(args.ckpt_path)["model"], strict=True)
+		
+	elif args.model_type == "plip":
+		from transformers import CLIPModel, CLIPProcessor
+		model = CLIPModel.from_pretrained("vinid/plip")
+		processor = CLIPProcessor.from_pretrained("vinid/plip")
+	
+	elif args.model_type == "uni":
+		import timm
+		model = timm.create_model(
+			"vit_large_patch16_224", img_size=224, patch_size=16, init_values=1e-5, num_classes=0, dynamic_img_size=True
+		)
+		model.load_state_dict(torch.load(args.ckpt_path, map_location=device), strict=True)
+	
+	
+	model.to(device)
+	print_network(model)
+	if torch.cuda.device_count() > 1:
+		model = torch.nn.DataParallel(model)
+	model.eval()
+	return model, processor
+
 def feature_extraction(args, file_path, output_path, wsi, model, processor,
  	verbose = 0, print_every=20):
 	"""
@@ -51,33 +95,6 @@ def feature_extraction(args, file_path, output_path, wsi, model, processor,
 	
 	return output_path
 
-def init_model(args):
-	if args.model_type == "resnet50":
-		backbone = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
-		backbone.fc = nn.Identity()
-		
-	elif args.model_type == "ssl":
-		from transformers import ViTModel
-		backbone = ViTModel.from_pretrained("owkin/phikon", add_pooling_layer=False)
-		
-	elif args.model_type == "ctp":
-		from models.ctran import ctranspath
-		backbone = ctranspath()
-		backbone.head = nn.Identity()
-		backbone.load_state_dict(torch.load(args.ckpt_path)["model"], strict=True)
-		
-	elif args.model_type == "plip":
-		from transformers import CLIPModel
-		backbone = CLIPModel.from_pretrained("vinid/plip")
-	
-	elif args.model_type == "uni":
-		import timm
-		backbone = timm.create_model(
-			"vit_large_patch16_224", img_size=224, patch_size=16, init_values=1e-5, num_classes=0, dynamic_img_size=True
-		)
-		backbone.load_state_dict(torch.load(args.ckpt_path, map_location=device), strict=True)
-
-	return backbone
 
 def collate_features(batch):
 	img = torch.cat([item[0] for item in batch], dim = 0)
