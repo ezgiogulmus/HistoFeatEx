@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import models
-from histofeatex.datasets import Whole_Slide_Bag_FP
+from histofex.datasets import Whole_Slide_Bag_FP
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
