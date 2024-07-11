@@ -5,8 +5,8 @@ import openslide
 import argparse
 import torch
 
-from histofeatex.datasets import Dataset_All_Bags
-from histofeatex.utils import feature_extraction, init_model
+from histofex.datasets import Dataset_All_Bags
+from histofex.utils import feature_extraction, init_model
 
 # This code is adapted from CLAM by Mahmoodlab (https://github.com/mahmoodlab/CLAM)
 

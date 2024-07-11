@@ -1,0 +1,1 @@
+from histofex.utils import init_model
