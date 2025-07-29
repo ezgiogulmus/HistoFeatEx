@@ -61,7 +61,7 @@ class Whole_Slide_Bag_FP(Dataset):
 		img = self.wsi.read_region(coord, self.patch_level, (self.patch_size, self.patch_size)).convert('RGB')
 		if self.model_type == "plip":
 			img = self.transform(images=img, return_tensors="pt")["pixel_values"]
-		elif self.model_type == "ssl":
+		elif self.model_type in ["ssl", "ssl2"]:
 			img = self.transform(img, return_tensors="pt")["pixel_values"]
 		else:
 			img = self.transform(img).unsqueeze(0)
